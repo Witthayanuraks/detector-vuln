@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -163,6 +164,114 @@ func processFile(path string) {
 	saveLog(path, detections)
 }
 
+// cmdflags
+var (
+	autoFix    = flag.Bool("autofix", true, "Enable auto-fix mode")
+	logDir     = flag.String("logdir", "logs", true,  "Directory for log files")
+	configPath = flag.String("config", "", "Path to custom config file")
+	exclude    = flag.String("exclude", "node_modules,.git", "Comma-separated exclude directories")
+	dryRun     = flag.Bool("dry-run", false, "Show fixes without modifying files")
+	verbose    = flag.Bool("verbose", false, "Show detailed output")
+)
+
+// config file support
+type Config struct {
+	Patterns   map[string]string `json:"patterns"`
+	Extensions []string          `json:"extensions"`
+	Severity   map[string]string `json:"severity"`
+}
+
+// Load patterns from config file
+func loadConfig(path string) {
+	// Read and parse config (add error handling)
+}
+
+// Exclusion Pattern
+func walkDir(root string) {
+	excludeDirs := strings.Split(*exclude, ",")
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		for _, dir := range excludeDirs {
+			if strings.Contains(path, dir) {
+				return filepath.SkipDir
+			}
+		}
+		// ... existing logic ...
+	})
+}
+
+// Whitelist Comments
+func scanFile(path string) ([]Detection, error) {
+	// ...
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "// vuln-scan-ignore") {
+			continue // Skip this line
+		}
+		// ... existing checks ...
+	}
+}
+
+func applyFix(line, pattern string) string {
+	switch pattern {
+	case "innerHTML":
+		return strings.Replace(line, "innerHTML", "textContent", -1)
+	case "eval":
+		return regexp.MustCompile(`\beval\((.*?)\)`).ReplaceAllString(line, "JSON.parse($1)")
+	}
+	return "// [FIXED] " + line
+}
+
+type Stats struct {
+    TotalFiles      int
+    Vulnerabilities map[string]int // Severity counts
+}
+
+func (s *Stats) Print() {
+    fmt.Printf("\n=== Scan Summary ===\n")
+    fmt.Printf("Files Scanned: %d\n", s.TotalFiles)
+    fmt.Printf("High: %d, Medium: %d, Low: %d\n",
+        s.Vulnerabilities["High"], s.Vulnerabilities["Medium"], s.Vulnerabilities["Low"])
+}
+
+// dryrun mode
+if *dryRun {
+    fmt.Printf("[Dry Run] Would fix line %d:\n  Original: %s\n  Fixed: %s\n",
+        det.LineNumber, det.Original, det.Fixed)
+    return
+}
+
+// enchanced error handling
+func saveFixedFile(path string, detections []Detection) error {
+    if !*autoFix {
+        return nil
+    }
+    if _, err := os.Stat(path); os.IsPermission(err) {
+        return fmt.Errorf("permission denied: %s", path)
+    }
+    // ... existing code ...
+}
+
+// proses indication
+func processFile(path string) {
+    if *verbose {
+        fmt.Printf("[*] Scanning: %s\n", path)
+    }
+    // ... existing code ...
+}
+
+
+// Reporting as JSON/ HTML Reports
+func saveLog(path string, detections []Detection) error {
+    switch *logFormat {
+    case "json":
+        // Generate JSON
+    case "html":
+        // Generate HTML table
+    default:
+        // Text format
+    }
+}
+
 func walkDir(root string) {
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -191,10 +300,24 @@ func main() {
 		fmt.Printf("[ERROR] %s\n", err)
 		return
 	}
-
+// add 
 	if info.IsDir() {
 		walkDir(target)
 	} else {
 		processFile(target)
 	}
+	flag.Parse()
+    if len(flag.Args()) < 1 {
+        fmt.Println("Usage: ./tool [flags] [file_or_directory]")
+        flag.PrintDefaults()
+        return
+    }
+
+    if *configPath != "" {
+        loadConfig(*configPath) // Load custom patterns
+    }
+
+    target := flag.Arg(0)
+    // ... rest of the logic ...
+}
 }
