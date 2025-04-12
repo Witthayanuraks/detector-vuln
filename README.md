@@ -28,5 +28,5 @@ Cara Kerja:
 
     Hasil log dan file perbaikan disimpan ke folder logs/ dan file baru bertanda _fixed.
 
-✅ Tujuan:
+? Tujuan:
 Membantu cyber security enthusiasts mendeteksi dan memperbaiki kerentanan dengan efisien dan transparan. 🚀
